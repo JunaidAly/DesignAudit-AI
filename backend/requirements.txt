@@ -1,0 +1,54 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Task Queue & Caching
+celery==5.3.4
+redis==5.0.1
+kombu==5.3.4
+
+# AI & LLM
+openai==1.60.2
+anthropic==0.7.1
+langchain==0.2.17
+langgraph==0.0.69
+langchain-openai==0.1.25
+langchain-community==0.2.19
+
+# Computer Vision
+pillow==10.1.0
+opencv-python==4.8.1.78
+
+# Authentication & Security
+python-jose==3.3.0
+passlib==1.7.4
+python-dotenv==1.0.0
+pydantic-extra-types==2.3.0
+
+# HTTP & Network
+httpx==0.25.2
+aiohttp==3.9.1
+aiofiles==23.2.1
+requests==2.31.0
+
+# AWS S3
+boto3==1.29.7
+
+# Monitoring & Logging
+sentry-sdk==1.38.0
+python-json-logger==2.0.7
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1

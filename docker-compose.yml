@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: designaudit-postgres
+    environment:
+      POSTGRES_USER: designaudit
+      POSTGRES_PASSWORD: dev_password_change_in_prod
+      POSTGRES_DB: designaudit_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U designaudit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - designaudit-network
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: designaudit-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - designaudit-network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: designaudit-backend
+    ports:
+      - "8000:8000"
+    environment:
+      ENV: development
+      DATABASE_URL: postgresql://designaudit:dev_password_change_in_prod@postgres:5432/designaudit_dev
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-test}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_S3_BUCKET: designaudit-uploads-dev
+      CORS_ORIGINS: http://localhost:3000,http://localhost:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./agents:/agents
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - designaudit-network
+
+  # Celery Worker (for async tasks)
+  celery:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: designaudit-celery
+    environment:
+      ENV: development
+      DATABASE_URL: postgresql://designaudit:dev_password_change_in_prod@postgres:5432/designaudit_dev
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test}
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    volumes:
+      - ./backend:/app
+      - ./agents:/agents
+    command: celery -A agents.tasks.audit_pipeline worker --loglevel=info
+    networks:
+      - designaudit-network
+
+  # Celery Beat (task scheduling)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: designaudit-celery-beat
+    environment:
+      ENV: development
+      DATABASE_URL: postgresql://designaudit:dev_password_change_in_prod@postgres:5432/designaudit_dev
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - ./agents:/agents
+    command: celery -A agents.tasks beat --loglevel=info
+    networks:
+      - designaudit-network
+
+volumes:
+  postgres_data:
+
+networks:
+  designaudit-network:
+    driver: bridge

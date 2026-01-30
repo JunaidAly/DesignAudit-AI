@@ -1,0 +1,18 @@
+{
+  "projectName": "DesignAudit-AI",
+  "description": "An AI Agent-Powered Design Quality Platform",
+  "version": "0.1.0",
+  "structure": {
+    "frontend": "Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui",
+    "backend": "FastAPI (Python) with async task processing",
+    "agents": "Multi-agent system using LangChain/LangGraph",
+    "database": "PostgreSQL with Prisma ORM",
+    "cache": "Redis for caching and task queue",
+    "storage": "AWS S3 / Vercel Blob for image storage"
+  },
+  "phases": {
+    "phase1": "MVP with single-agent (Inspector)",
+    "phase2": "Complete multi-agent system",
+    "phase3": "Visualization, chat, and scaling"
+  }
+}
